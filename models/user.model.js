@@ -1,8 +1,9 @@
-const {defaule: mongoose} = require("mongoose");
+const {defaule: mongoose, Schema} = require("mongoose");
 
 //creat user schema
 
 const userSchema = new mongoose.Schema({
+    _id: Schema.Types.ObjectId,
     username: {
         type: String,
         required: true
