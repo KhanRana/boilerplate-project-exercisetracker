@@ -72,28 +72,25 @@ app.get("/api/users", async function (req, res) {
 app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const { _id } = req.params;
-    if(req.query.from || req.query.to || req.query.limit){
-      if(!req.query.from || !req.query.to || !req.query.limit){
-        return res.json({error: "from, to and limit are required"})
-      }
-
       let { from, to, limit } = req.query;
+      if(from && to){
       console.log(from);
       console.log(to);
-      console.log(limit);
 
       from = new Date(from);
       to = new Date(to);
-      limit = parseInt(limit);
       date = `this.date >= ${from} && this.date <= ${to}`;
       const user = await User.findById(_id);
-      const exercises = await Exercise.find({
+      let exercises = await Exercise.find({
         userId: _id,
         date: {
           $gte: from,
           $lte: to,
         },
-      }).limit(limit);
+      });
+      if (limit) {
+        exercises = exercises.slice(0, limit);
+      }
 
       console.log(exercises);
       const logs = exercises.map((exercise) => {
