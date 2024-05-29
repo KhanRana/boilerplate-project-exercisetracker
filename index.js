@@ -73,6 +73,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const {_id} = req.params;
     console.log(_id);
+    if(req.query.from && req.query.to && req.query.limit){
     let {from, to, limit} = req.query;
       console.log(from);
       console.log(to);
@@ -87,7 +88,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
       $gte: from,
       $lte: to
     }}).limit(limit);
-
+  
     console.log(exercises);
     const logs = exercises.map(exercise => {
       return {
@@ -102,7 +103,24 @@ app.get("/api/users/:_id/logs", async function (req, res) {
       username: user.username,
       count: exercises.length,
       logs: logs
-    });
+    });}
+    else{
+      const user = await User.findById(_id);
+      const exercises = await Exercise.find({userId: _id});
+      const logs = exercises.map(exercise => {
+        return {
+          description: exercise.description,
+          duration: exercise.duration,
+          date: exercise.date.toDateString()
+        }
+      })
+      res.json({
+        _id: user._id,
+        username: user.username,
+        count: exercises.length,
+        logs: logs
+      });
+    }
   } catch (error) {
     console.log(error);
   }
