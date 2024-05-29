@@ -51,6 +51,21 @@ app.post("/api/users/:_id/exercises", async function (req, res) {
   }
 })
 
+app.get("/api/users", async function (req, res) {
+  try {
+    const users = await User.find();
+    const userArray = users.map(user => {
+      return {
+        _id: user._id,
+        username: user.username
+      }
+    })
+    res.json(userArray);
+  } catch (error) {
+    console.log(error);
+  }
+})
+
 app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const {_id} = req.params;
@@ -63,11 +78,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
       from = new Date(from);
       to = new Date(to);
       limit = parseInt(limit);
-      date = `this.date >= ${from} && this.date <= ${to}`;
-      console.log(date);
-      console.log(from);
-      console.log(to);
-      console.log(limit);  
+      date = `this.date >= ${from} && this.date <= ${to}`; 
     const user = await User.findById(_id);
     const exercises = await Exercise.find({userId: _id, date: {
       $gte: from,
