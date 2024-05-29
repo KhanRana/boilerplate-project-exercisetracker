@@ -69,12 +69,12 @@ app.get("/api/users", async function (req, res) {
   }
 });
 
-app.get("/api/users/:_id/logs?", async function (req, res) {
+app.get("/api/users/:_id/logs/:from?/:to?/:limit?", async function (req, res) {
   try {
     const { _id } = req.params;
     console.log(_id);
-    if (req.query.from && req.query.to && req.query.limit) {
-      let { from, to, limit } = req.query;
+    if (req.params.from && req.params.to && req.params.limit) {
+      let { from, to, limit } = req.params;
       console.log(from);
       console.log(to);
       console.log(limit);
