@@ -1,7 +1,14 @@
 const mongoose = require("mongoose");
+const { User } = require("../models/user.model");
+const { Exercise } = require("../models/exercise.model")
 
-const connect = async function main() {
-  await mongoose.connect("mongodb://localhost:27017/fruitsDB");
-}.catch((err) => console.log(err));
+const conn = async function (dataBase) {
+  try {
+    await mongoose.connect(dataBase);
+    console.log("connected to the database")
+  } catch (error) {
+    console.log(error)
+  }
+}
 
-module.exports = connect;
+module.exports = conn;

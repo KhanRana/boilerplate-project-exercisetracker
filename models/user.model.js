@@ -1,8 +1,9 @@
-const {defaule: mongoose, Schema} = require("mongoose");
+const {default: mongoose} = require("mongoose");
 
-//creat user schema
+//create user schema
+const Schema = mongoose.Schema
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
     _id: Schema.Types.ObjectId,
     username: {
         type: String,
