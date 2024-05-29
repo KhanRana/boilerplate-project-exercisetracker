@@ -4,6 +4,7 @@ const cors = require('cors')
 const conn = require('./db/db');
 const { User } = require('./models/user.model');
 const { Exercise } = require('./models/exercise.model');
+const requestIp = require('request-ip');
 
 const bodyParser = require("body-parser");
 require("dotenv").config();
@@ -12,6 +13,7 @@ conn(process.env.DATABASE);
 app.use(cors())
 app.use(express.static('public'))
 app.get('/', (req, res) => {
+  console.log(requestIp.getClientIp(req))
   res.sendFile(__dirname + '/views/index.html')
 });
 
@@ -21,6 +23,7 @@ app.post("/api/users", async function (req, res) {
   try {
     const {username} = req.body;
     const user = await User.create({username: username});
+
     console.log(user);
     res.json({username: user.username, _id: user._id});
   } catch (error) {
