@@ -28,6 +28,29 @@ app.post("/api/users", async function (req, res) {
   }
 })
 
+app.post("/api/users/:_id/exercises", async function (req, res) {
+  try {
+    const {_id} = req.params;
+    const {description, duration, date} = req.body;
+    const user = await User.findById(_id);
+    const exercise = await Exercise.create({
+      description: description,
+      duration: duration,
+      date: date ? new Date(date) : new Date(),
+      userId: _id
+    });
+    res.json({
+      username: user.username,
+      description: exercise.description,
+      duration: exercise.duration,
+      _id: user._id,
+      date: exercise.date.toDateString()
+    });
+  } catch (error) {
+    console.log(error);
+  }
+})
+
 
 
 
