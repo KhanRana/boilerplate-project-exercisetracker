@@ -105,7 +105,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
         _id: user._id,
         username: user.username,
         count: exercises.length,
-        logs: logs,
+        log: logs,
       });
     } else {
       const user = await User.findById(_id);
