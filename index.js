@@ -69,12 +69,15 @@ app.get("/api/users", async function (req, res) {
   }
 });
 
-app.get("/api/users/:_id/logs/:from?/:to?/:limit?", async function (req, res) {
+app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const { _id } = req.params;
-    console.log(_id);
-    if (req.params.from && req.params.to && req.params.limit) {
-      let { from, to, limit } = req.params;
+    if(req.query.from || req.query.to || req.query.limit){
+      if(!req.query.from || !req.query.to || !req.query.limit){
+        return res.json({error: "from, to and limit are required"})
+      }
+
+      let { from, to, limit } = req.query;
       console.log(from);
       console.log(to);
       console.log(limit);
