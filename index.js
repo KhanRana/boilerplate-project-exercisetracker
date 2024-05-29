@@ -51,6 +51,48 @@ app.post("/api/users/:_id/exercises", async function (req, res) {
   }
 })
 
+app.get("/api/users/:_id/logs", async function (req, res) {
+  try {
+    const {_id} = req.params;
+    console.log(_id);
+    let {from, to, limit} = req.query;
+      console.log(from);
+      console.log(to);
+      console.log(limit);
+
+      from = new Date(from);
+      to = new Date(to);
+      limit = parseInt(limit);
+      date = `this.date >= ${from} && this.date <= ${to}`;
+      console.log(date);
+      console.log(from);
+      console.log(to);
+      console.log(limit);  
+    const user = await User.findById(_id);
+    const exercises = await Exercise.find({userId: _id, date: {
+      $gte: from,
+      $lte: to
+    }}).limit(limit);
+
+    console.log(exercises);
+    const logs = exercises.map(exercise => {
+      return {
+        description: exercise.description,
+        duration: exercise.duration,
+        date: exercise.date.toDateString()
+      }
+    })
+    console.log(logs);
+    res.json({
+      _id: user._id,
+      username: user.username,
+      count: exercises.length,
+      logs: logs
+    });
+  } catch (error) {
+    console.log(error);
+  }
+})
 
 
 
