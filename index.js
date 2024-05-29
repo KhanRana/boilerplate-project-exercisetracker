@@ -1,8 +1,11 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const conn = require('./db/db')
+const conn = require('./db/db');
+const { User } = require('./models/user.model');
+const { Exercise } = require('./models/exercise.model');
 
+const bodyParser = require("body-parser");
 require("dotenv").config();
 
 conn(process.env.DATABASE);
@@ -12,9 +15,18 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post()
+app.post("/api/users", async function (req, res) {
+  try {
+    const {username} = req.body;
+    const user = await User.create({username: username});
+    console.log(user);
+    res.json({username: user.username, _id: user._id});
+  } catch (error) {
+    console.log(error);
+  }
+})
 
 
 
