@@ -69,7 +69,53 @@ app.get("/api/users", async function (req, res) {
   }
 });
 
-app.get("/api/users/:_id/logs", async function (req, res) {
+app.get("/api/users/:_id/logs", (req, res) => {
+  // get user id from params and check that it won't break the DB query
+  const { _id } = req.params;
+  if (_id.length !== 24) {
+    return res.json({ error: "User ID needs to be 24 hex characters" });
+  }
+
+  // find the user
+  getUserByIdAnd(_id, (userObject) => {
+    if (userObject === null) res.json({ error: "User not found" });
+    else {
+      const limit = req.query.limit ? req.query.limit : 0;
+
+      // /!\ NOTE `limit` is being applied here BEFORE `from` and `to`
+      let promise = ExerciseActivity.find({ user_id: _id }).limit(limit).exec();
+      assert.ok(promise instanceof Promise);
+      promise.then((exerciseObjects) => {
+        // /!\ NOTE `limit` has already been applied at this point, so only
+        // the truncated array of exercises will be filtered by `from` and `to`
+        if (req.query.from) {
+          const from = new Date(req.query.from);
+          exerciseObjects = exerciseObjects.filter(
+            (e) => new Date(e.date).getTime() >= from.getTime()
+          );
+        }
+        if (req.query.to) {
+          const to = new Date(req.query.to);
+          exerciseObjects = exerciseObjects.filter(
+            (e) => new Date(e.date).getTime() <= to.getTime()
+          );
+        }
+        exerciseObjects = exerciseObjects.map((e) => ({
+          ...e,
+          date: new Date(e.date).toDateString(),
+        }));
+
+        res.json({
+          _id: userObject._id,
+          username: userObject.username,
+          count: exerciseObjects.length,
+          log: exerciseObjects,
+        });
+      });
+    }
+  });
+});
+// app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const { _id } = req.params;
     if (!_id) {
@@ -136,7 +182,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
   } catch (error) {
     console.log(error);
   }
-});
+// });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
