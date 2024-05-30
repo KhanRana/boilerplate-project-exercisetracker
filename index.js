@@ -69,120 +69,41 @@ app.get("/api/users", async function (req, res) {
   }
 });
 
-app.get("/api/users/:_id/logs", (req, res) => {
-  // get user id from params and check that it won't break the DB query
-  const { _id } = req.params;
-  if (_id.length !== 24) {
-    return res.json({ error: "User ID needs to be 24 hex characters" });
-  }
+app.get("/api/users/:_id/logs", async function (req, res) {
+  try {
+    const { _id } = req.params;
+    const { from, to, limit } = req.query;
+    
+    const user = await User.findById(_id);
+    if (!user) return res.status(404).send("User not found");
+    
+    let dateObj = {}
+    if (from) dateObj["$gte"] = new Date(from);
+    if (to) dateObj["$lte"] = new Date(to);
 
-  // find the user
-  getUserByIdAnd(_id, (userObject) => {
-    if (userObject === null) res.json({ error: "User not found" });
-    else {
-      const limit = req.query.limit ? req.query.limit : 0;
+    let filter = { userId: _id }; 
+    if (from || to) filter.date = dateObj;  
+    const exercises = await Exercise.find(filter).limit(+limit ?? 5);
+    const count = exercises.length;
 
-      // /!\ NOTE `limit` is being applied here BEFORE `from` and `to`
-      let promise = ExerciseActivity.find({ user_id: _id }).limit(limit).exec();
-      assert.ok(promise instanceof Promise);
-      promise.then((exerciseObjects) => {
-        // /!\ NOTE `limit` has already been applied at this point, so only
-        // the truncated array of exercises will be filtered by `from` and `to`
-        if (req.query.from) {
-          const from = new Date(req.query.from);
-          exerciseObjects = exerciseObjects.filter(
-            (e) => new Date(e.date).getTime() >= from.getTime()
-          );
-        }
-        if (req.query.to) {
-          const to = new Date(req.query.to);
-          exerciseObjects = exerciseObjects.filter(
-            (e) => new Date(e.date).getTime() <= to.getTime()
-          );
-        }
-        exerciseObjects = exerciseObjects.map((e) => ({
-          ...e,
-          date: new Date(e.date).toDateString(),
-        }));
+    const log = exercises.map((exercise) => {
+      return {
+        description: exercise.description,
+        duration: exercise.duration,
+        date: exercise.date.toDateString(),
+      };
+    });
+    res.json({
+      _id: user._id,
+      username: user.username,
+      count: count,
+      log: log,
+    });
 
-        res.json({
-          _id: userObject._id,
-          username: userObject.username,
-          count: exerciseObjects.length,
-          log: exerciseObjects,
-        });
-      });
+  } catch (error){
+      console.log(error);
     }
-  });
 });
-// app.get("/api/users/:_id/logs", async function (req, res) {
-  // try {
-  //   const { _id } = req.params;
-  //   if (!_id) {
-  //     return res.json({ error: "Invalid Id" });
-  //   }
-  //   const user = await User.findById(_id);
-  //   let exercises = await Exercise.find({userId: user._id})
-  //   // console.log(exercises);
-
-  //   let { from, to, limit } = req.query;
-  //   let startFrom;
-  //   let endTo;
-
-  //   if (from && to) {
-  //     startFrom = new Date(from).toISOString();
-  //     endTo = new Date(to).toISOString();
-  //     if (startFrom === "invalid date" || endTo === "invalid date") {
-  //       return res.json({ error: "Invalid Date" });
-  //     }
-  //     if (startFrom > endTo) {
-  //       return res.json({ error: "Invalid Date" });
-  //     }
-  //     console.log(startFrom);
-  //     console.log(endTo);
-      
-  //     date = `this.date >= ${startFrom} && this.date <= ${endTo}`;
-  //     // const user = await User.findById(_id);
-  //     exercises = exercises.filter((exercise) => {
-  //       return (
-  //         exercise.date.toISOString() >= startFrom &&
-  //         exercise.date.toISOString() <= endTo
-  //       );
-  //     })
-  //     console.log(exercises);
-  //     if (limit) {
-  //       const setLimit = parseInt(limit);
-  //       if (isNaN(setLimit)) {
-  //         return res.json({ error: "Invalid Limit" });
-  //       }
-  //       exercises = exercises.slice(0, setLimit);
-  //     }
-  //   }
-  //     // get the count
-  //     const count = exercises.length;
-  //     if (count === 0) {
-  //       return res.json({ error: "No Exercises Found" });
-  //     }
-  //     console.log(exercises);
-  //     const logs = exercises.map((exercise) => {
-  //       return {
-  //         description: exercise.description,
-  //         duration: exercise.duration,
-  //         date: exercise.date.toDateString(),
-  //       };
-  //     });
-  //     console.log(logs);
-  //     res.json({
-  //       _id: user._id,
-  //       username: user.username,
-  //       count: count,
-  //       log: logs,
-  //     });
-   
-  // } catch (error) {
-  //   console.log(error);
-  // }
-// });
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
