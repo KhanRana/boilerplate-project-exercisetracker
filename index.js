@@ -72,32 +72,46 @@ app.get("/api/users", async function (req, res) {
 app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const { _id } = req.params;
+    if (!_id) {
+      return res.json({ error: "Invalid Id" });
+    }
+    const user = await User.findById(_id);
+    let exercises = await Exercise.find({userId: user._id})
+    // console.log(exercises);
+
     let { from, to, limit } = req.query;
+    let startFrom;
+    let endTo;
+
     if (from && to) {
-      from = new Date(from).toISOString();
-      to = new Date(to).toISOString();
-      if (from === "invalid date" || to === "invalid date") {
+      startFrom = new Date(from).toISOString();
+      endTo = new Date(to).toISOString();
+      if (startFrom === "invalid date" || endTo === "invalid date") {
         return res.json({ error: "Invalid Date" });
       }
-      console.log(from);
-      console.log(to);
+      if (startFrom > endTo) {
+        return res.json({ error: "Invalid Date" });
+      }
+      console.log(startFrom);
+      console.log(endTo);
       
-      date = `this.date >= ${from} && this.date <= ${to}`;
-      const user = await User.findById(_id);
-      let exercises = await Exercise.find({
-        userId: _id,
-        date: {
-          $gte: from,
-          $lte: to,
-        },
-      });
+      date = `this.date >= ${startFrom} && this.date <= ${endTo}`;
+      // const user = await User.findById(_id);
+      exercises = exercises.filter((exercise) => {
+        return (
+          exercise.date.toISOString() >= startFrom &&
+          exercise.date.toISOString() <= endTo
+        );
+      })
+      console.log(exercises);
       if (limit) {
-        limit = parseInt(limit);
-        if (isNaN(limit)) {
+        const setLimit = parseInt(limit);
+        if (isNaN(setLimit)) {
           return res.json({ error: "Invalid Limit" });
         }
-        exercises = exercises.slice(0, limit);
+        exercises = exercises.slice(0, setLimit);
       }
+    }
       // get the count
       const count = exercises.length;
       if (count === 0) {
@@ -118,23 +132,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
         count: count,
         log: logs,
       });
-    } else {
-      const user = await User.findById(_id);
-      const exercises = await Exercise.find({ userId: _id });
-      const logs = exercises.map((exercise) => {
-        return {
-          description: exercise.description,
-          duration: exercise.duration,
-          date: exercise.date.toDateString(),
-        };
-      });
-      res.json({
-        _id: user._id,
-        username: user.username,
-        count: exercises.length,
-        log: logs,
-      });
-    }
+   
   } catch (error) {
     console.log(error);
   }
