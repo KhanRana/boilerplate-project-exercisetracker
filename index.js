@@ -98,7 +98,11 @@ app.get("/api/users/:_id/logs", async function (req, res) {
         }
         exercises = exercises.slice(0, limit);
       }
-
+      // get the count
+      const count = exercises.length;
+      if (count === 0) {
+        return res.json({ error: "No Exercises Found" });
+      }
       console.log(exercises);
       const logs = exercises.map((exercise) => {
         return {
@@ -111,7 +115,7 @@ app.get("/api/users/:_id/logs", async function (req, res) {
       res.json({
         _id: user._id,
         username: user.username,
-        count: exercises.length,
+        count: count,
         log: logs,
       });
     } else {
