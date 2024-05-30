@@ -72,13 +72,16 @@ app.get("/api/users", async function (req, res) {
 app.get("/api/users/:_id/logs", async function (req, res) {
   try {
     const { _id } = req.params;
-      let { from, to, limit } = req.query;
-      if(from && to){
+    let { from, to, limit } = req.query;
+    if (from && to) {
+      from = new Date(from).toISOString();
+      to = new Date(to).toISOString();
+      if (from === "invalid date" || to === "invalid date") {
+        return res.json({ error: "Invalid Date" });
+      }
       console.log(from);
       console.log(to);
-
-      from = new Date(from);
-      to = new Date(to);
+      
       date = `this.date >= ${from} && this.date <= ${to}`;
       const user = await User.findById(_id);
       let exercises = await Exercise.find({
@@ -89,6 +92,10 @@ app.get("/api/users/:_id/logs", async function (req, res) {
         },
       });
       if (limit) {
+        limit = parseInt(limit);
+        if (isNaN(limit)) {
+          return res.json({ error: "Invalid Limit" });
+        }
         exercises = exercises.slice(0, limit);
       }
 
